@@ -1,0 +1,5 @@
+/Users/user/Desktop/J/HiddenVillageIntelligence (C++)/build/CMakeFiles/app.dir
+/Users/user/Desktop/J/HiddenVillageIntelligence (C++)/build/CMakeFiles/run_tests.dir
+/Users/user/Desktop/J/HiddenVillageIntelligence (C++)/build/CMakeFiles/run_department_tests.dir
+/Users/user/Desktop/J/HiddenVillageIntelligence (C++)/build/CMakeFiles/edit_cache.dir
+/Users/user/Desktop/J/HiddenVillageIntelligence (C++)/build/CMakeFiles/rebuild_cache.dir

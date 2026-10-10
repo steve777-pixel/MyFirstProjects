@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="test.AccountTest" tests="17" skipped="0" failures="0" errors="0" timestamp="2026-09-03T13:18:02.963Z" hostname="DESKTOP-QUBSCDL" time="0.011">
+  <properties/>
+  <testcase name="testSameAccount()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testDepositSuccess()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testDepositNegativeAmountThrows()" classname="test.AccountTest" time="0.001"/>
+  <testcase name="testAccountNumberNullOrBlankThrows()" classname="test.AccountTest" time="0.001"/>
+  <testcase name="testWithdrawInsufficientFundThrows()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testAccountNumberInvalidFormatThrows()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testTransferToNullThrows()" classname="test.AccountTest" time="0.001"/>
+  <testcase name="testTransferSuccess()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testWithdrawSuccess()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testTransferInsufficientFundThrows()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testInitialBalance()" classname="test.AccountTest" time="0.001"/>
+  <testcase name="testWithdrawNegativeAmountThrows()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testTransferToSelfThrows()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testOwnerName()" classname="test.AccountTest" time="0.001"/>
+  <testcase name="testAccountNumber()" classname="test.AccountTest" time="0.0"/>
+  <testcase name="testTransferNegativeAmountThrows()" classname="test.AccountTest" time="0.001"/>
+  <testcase name="testCompareDifferentAccount()" classname="test.AccountTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

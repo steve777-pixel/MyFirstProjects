@@ -1,0 +1,87 @@
+========================================================================
+GRADLE SETUP FOR PROJECT: BankAccount (Java)
+========================================================================
+
+1. PROJECT DIRECTORY LAYOUT
+------------------------------------------------------------------------
+Your custom folder structure maps to Gradle using the configuration below:
+
+│   .gitignore
+│   build.gradle            <-- Put the build file here
+│   GRADLE_SETUP.txt        <-- This help file
+│   
+├───app
+│       Index.java          <-- Main application entry point
+│       
+├───models
+│       Account.java
+│       Bank.java
+│       
+├───test
+│       DemoTest.java       <-- JUnit 5 Test file
+│       
+└───utils
+        Validation.java
+
+
+2. NECESSARY LINES OF CODE (build.gradle)
+------------------------------------------------------------------------
+Create a file named 'build.gradle' in the root directory and paste this:
+
+plugins {
+    id 'java'
+}
+
+repositories {
+    // Automatically downloads dependencies from the internet
+    mavenCentral()
+}
+
+dependencies {
+    // Required JUnit 5 dependencies for testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Maps your custom folder layout so Gradle knows where your code lives
+sourceSets {
+    main {
+        java {
+            srcDirs = ['app', 'models', 'utils']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['.']
+            include 'test/**'
+        }
+    }
+}
+
+// Configures the test task to use the JUnit 5 platform engine
+test {
+    useJUnitPlatform()
+
+    // Configuration to print clear failure logs directly in PowerShell
+    testLogging {
+        events "failed"                  // Only logs tests that fail
+        exceptionFormat "short"          // Displays a concise error message
+        showCauses true                  // Shows why the test failed
+        showStackTraces false            // Hides long, messy stack traces
+    }
+}
+
+
+3. USEFUL POWERSHELL COMMANDS
+------------------------------------------------------------------------
+Run these commands from the project root directory:
+
+• Compile and run your tests:
+  gradle test
+
+• Force a full cleanup and re-run all tests:
+  gradle clean test
+
+• Open the visual HTML test results report in your browser:
+  Start-Process build/reports/tests/test/index.html
+========================================================================
