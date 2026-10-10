@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    // Gradle will automatically download JUnit 5 from the official internet repository
+    mavenCentral()
+}
+
+dependencies {
+    // Fetches JUnit 5 API
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    
+    // REQUIRED FOR JAVA 25: Allows Gradle's test executor to spin up successfully
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+
+// Maps your custom folder layout so Gradle knows where your code is
+sourceSets {
+    main {
+        java {
+            srcDirs = ['app', 'business', 'models', 'utils']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['.'] // Looks at the root
+            include 'test/**' // Only compiles files inside the test folder
+        }
+    }
+}
+
+
+// Tells Gradle to use the JUnit Platform engine to run JUnit 5 tests
+test {
+    useJUnitPlatform()
+
+    // Configuration to print clear failure logs directly in PowerShell
+    testLogging {
+        events "failed"                  // Only logs tests that fail
+        exceptionFormat "short"          // Displays a concise error message
+        showCauses true                  // Shows why the test failed
+        showStackTraces false            // Hides long, messy stack traces
+    }
+}

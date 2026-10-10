@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="test.BankTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-09-03T13:18:02.928Z" hostname="DESKTOP-QUBSCDL" time="0.033">
+  <properties/>
+  <testcase name="testRemoveAccountSuccess()" classname="test.BankTest" time="0.018"/>
+  <testcase name="testAccountNotFoundThrows()" classname="test.BankTest" time="0.002"/>
+  <testcase name="testTransferSuccess()" classname="test.BankTest" time="0.0"/>
+  <testcase name="testBankCreation()" classname="test.BankTest" time="0.001"/>
+  <testcase name="testTransferToSelfThrows()" classname="test.BankTest" time="0.0"/>
+  <testcase name="testBankDuplicateAccountThrows()" classname="test.BankTest" time="0.0"/>
+  <testcase name="testBankAccountSuccess()" classname="test.BankTest" time="0.0"/>
+  <testcase name="testRemoveAccountThrows()" classname="test.BankTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

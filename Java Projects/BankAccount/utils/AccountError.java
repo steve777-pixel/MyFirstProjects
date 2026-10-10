@@ -1,0 +1,9 @@
+package utils;
+
+public enum AccountError {
+    INSUFFICIENT_FUNDS,
+    NULL_USER,
+    TRANSFER_TO_SELF,
+    NEGATIVE_AMOUNT,
+    INVALID_ACCOUNT_NUMBER_FORMAT
+}

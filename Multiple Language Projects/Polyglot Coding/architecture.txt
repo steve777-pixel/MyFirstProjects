@@ -1,0 +1,90 @@
+================================================================================
+          📦 ENTERPRISE POLYGLOT ARCHITECTURE: JAVA PACKAGES + C++ CORE
+================================================================================
+
+1. DIRECTORY TREE LAYOUT
+--------------------------------------------------------------------------------
+my-polyglot-project/
+│
+├── src/                            📂 ALL JAVA SOURCE FILES
+│   ├── app/                        
+│   │   ├── Main.java               🏁 Application entry point (Business Logic)
+│   │   └── Index.java              🤝 JNI Proxy Hook (Holds "static native" hooks)
+│   │
+│   ├── models/                     🧬 DATA & DOMAIN MODELS
+│   │   ├── Employee.java           ☕ Abstract Base Class
+│   │   ├── Contractor.java         💼 Subclass (Inheritance)
+│   │   └── Executive.java          👔 Subclass (Inheritance)
+│   │
+│   ├── utils/                      🛠️ UTILITIES & HELPER TOOLKITS
+│   │   └── Validation.java         ☕ Data cleaning & verification tools
+│   │
+│   └── test/                       🧪 TESTING FRAMEWORKS
+│       └── TestSuite.java          ☕ System unit tests
+│
+├── mathEngine/                     📂 ALL C++ HARDWARE-ACCELERATED FILES
+│   ├── math.cpp                    🛸 JNI Translation Layer (Alien Wrapper Only)
+│   ├── core_algorithms.cpp         🚀 Pure C++ Algorithms (Standard C++ Only)
+│   └── core_algorithms.h           📋 Pure C++ Header Declarations
+│
+└── run.bat                         📝 ONE-CLICK AUTOMATION BUILD SCRIPT
+
+
+2. COMPONENT RESPONSIBILITY BREAKDOWN
+--------------------------------------------------------------------------------
+🔹 Java Layer (src/)        -> Focuses heavily on OOP Design Principles. 
+                               Handles Object Hierarchies, Encapsulation, 
+                               Data Validation, UI, and workflows.
+
+🔹 JNI Bridge (Index.java)   -> Acts as the declaration dock. It maps Java method 
+                               signatures to external system memory channels.
+
+🔹 C++ Wrapper (math.cpp)    -> Acts as a border translator. Extracts primitives 
+                               from Java memory structures, forwards them to 
+                               pure C++, and boxes the answers back up.
+
+🔹 C++ Core (core_...)       -> Focuses on mathematical and hardware optimization.
+                               Uses vectors, pointers, and raw memory pools for 
+                               computational speed.
+
+
+3. THE AUTOMATION RECIPE (run.bat)
+--------------------------------------------------------------------------------
+@echo off
+cls
+echo =======================================================================
+echo                 🏭 STARTING MULTI-LANGUAGE BUILD ENGINE               
+echo =======================================================================
+
+echo.
+echo [1/3] ☕ Compiling Java Modules (Utilities, Models, and Applications)...
+javac src\utils\*.java src\models\*.java src\app\*.java -d src\
+
+if %errorlevel% neq 0 (
+    echo ❌ Java Compilation Failed!
+    pause
+    exit /b
+)
+
+echo.
+echo [2/3] 🛠️ Compiling C++ Core Engine and linking JNI Shared Library (.dll)...
+g++ -shared -o src\MathEngine.dll -I"C:\Users\Asus\AppData\Local\Programs\Eclipse Adoptium\jdk-25.0.3.9-hotspot\include" -I"C:\Users\Asus\AppData\Local\Programs\Eclipse Adoptium\jdk-25.0.3.9-hotspot\include\win32" mathEngine\math.cpp mathEngine\core_algorithms.cpp
+
+if %errorlevel% neq 0 (
+    echo ❌ C++ Linker/Compilation Failed!
+    pause
+    exit /b
+)
+
+echo.
+echo [3/3] 🚀 Launching High-Performance Polyglot Application...
+echo -----------------------------------------------------------------------
+cd src
+java --enable-native-access=ALL-UNNAMED app.Main
+cd ..
+
+echo.
+echo =======================================================================
+echo                 🏁 POLYGLOT SYSTEM TERMINATED CLEANLY                 
+echo =======================================================================
+pause

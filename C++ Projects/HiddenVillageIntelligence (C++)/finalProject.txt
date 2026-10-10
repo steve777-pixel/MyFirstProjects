@@ -1,0 +1,1143 @@
+Here is the project structure (2 Depth)
+
+├── CMakeLists.txt
+├── build
+│   ├── CMakeCache.txt
+│   ├── CMakeFiles
+│   ├── Makefile
+│   ├── app
+│   ├── cmake_install.cmake
+│   ├── run_department_tests
+│   └── run_tests
+├── data
+│   └── agents.txt
+├── include
+│   ├── agent.h
+│   ├── eliteAnbuAgent.h
+│   ├── exceptions.h
+│   ├── infiltrationAgent.h
+│   ├── intelligenceDatabase.h
+│   ├── intelligenceDepartment.h
+│   ├── intelligenceReport.h
+│   ├── mission.h
+│   ├── reconAgent.h
+│   └── validation.h
+├── src
+│   ├── agent.cpp
+│   ├── eliteAnbuAgent.cpp
+│   ├── infiltrationAgent.cpp
+│   ├── intelligenceDepartment.cpp
+│   ├── intelligenceReport.cpp
+│   ├── main.cpp
+│   ├── mission.cpp
+│   └── reconAgent.cpp
+└── tests
+    ├── test_database.cpp
+    ├── test_department.cpp
+    └── test_main.cpp
+
+7 directories, 29 files
+
+--------------------------------------------------------------------------------------------
+
+cmake_minimum_required(VERSION 3.15)
+project(IntelligenceSystem CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include_directories(include)
+
+# 1. Collect all your actual source files
+file(GLOB SOURCES "src/*.cpp")
+
+# 2. Production Build: Create the primary app target
+# This assumes src/main.cpp is inside your src/ folder
+add_executable(app ${SOURCES})
+
+# 3. Testing Build: Create a second, standalone executable runner
+# We copy all the domain behavior but replace src/main.cpp with your test file
+set(TEST_SOURCES ${SOURCES})
+list(REMOVE_ITEM TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+
+add_executable(run_tests tests/test_database.cpp ${TEST_SOURCES})
+
+add_executable(run_department_tests tests/test_department.cpp ${TEST_SOURCES})
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include "intelligenceReport.h"
+#include "mission.h"
+#include <string>
+#include <vector>
+#include <compare>
+#include <unordered_map>
+
+class IntelligenceDepartment;
+
+class Agent{
+protected:
+    std::string id;
+    std::string codeName;
+    int age;
+    int yearsOfExperience;
+    std::unordered_map<std::string, std::shared_ptr<Mission> > missions; // shared_ptr or unique_ptr ???
+
+public:
+    Agent(const std::string &id, const std::string &codeName, int age, int yearsOfExperience);
+
+    std::string getId() const;
+    std::string getCodeName() const;
+    int getAge() const;
+    int getExperience() const;
+    std::vector<std::shared_ptr<Mission> > getMissionsList() const;
+
+    void setCodeName(const std::string &codeName);
+    void setAge(int age);
+    void setExperience(int experience);
+    void addExperience(int experience);
+    void assignMission(std::shared_ptr<Mission> mission);
+    void removeMission(const std::string &id);
+    void completeMission(const std::string &id);
+    Mission* findMissionById(const std::string &id) const;
+
+    void showMissions() const;
+    bool hasCompleted(const std::string &id) const;
+    std::string getRank() const{
+        int a = calculateThreatLevel();
+        if(a <= 25) return "D";
+        if(a <= 50) return "C";
+        if(a <= 100) return "B";
+        if(a <= 200) return "A";
+        return "S";
+    }
+
+    void submitReport(std::unique_ptr<IntelligenceReport> report, IntelligenceDepartment *department);
+
+    virtual void displayInfo() const;
+    virtual double calculateThreatLevel() const = 0;
+    virtual std::string getType() const = 0;
+    virtual std::string serialize() const = 0;
+    virtual ~Agent() = default;
+
+    // auto operator<=>(const Agent& other) const = default;
+
+    bool operator==(const Agent &other) const;
+};
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include "agent.h"
+#include <string>
+
+class infiltrationAgent : public Agent{
+protected:
+    int villagesPenetrated;
+
+public:
+    infiltrationAgent(const std::string &id, const std::string &codeName, int age, int yearsOfExperience, int villagesPenetrated);
+
+    int getVillagesPenetrated() const;
+
+    void setVillagesPenetrated(int amount);
+    void addVillagesPenetrated(int amount);
+
+    void displayInfo() const override;
+    double calculateThreatLevel() const override;
+    std::string getType() const override;
+    std::string serialize() const override;
+    virtual ~infiltrationAgent() = default;
+};
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include "agent.h"
+#include <string>
+
+class reconAgent : public Agent{
+protected:
+    int missionsObserved;
+
+public:
+    reconAgent(const std::string &id, const std::string &codeName, int age, int yearsOfExperience, int missionsObserved);
+
+    int getMissionsObserved() const;
+
+    void setMissionsObserved(int count);
+    void addMissionCount(int count);
+
+    void displayInfo() const override;
+    double calculateThreatLevel() const override;
+    std::string getType() const override;
+    std::string serialize() const override;
+    virtual ~reconAgent() = default;
+};
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include "agent.h"
+
+class eliteAnbuAgent : public Agent{
+protected:
+    int classifiedOperations;
+public:
+    eliteAnbuAgent(const std::string &id, const std::string &codeName, int age, int yearsOfExperience, int classifiedOperations);
+
+    int getClassifiedOperations() const;
+
+    void setClassifiedOperations(int amount);
+    void addClassifiedOperations(int amount);
+
+    void displayInfo() const override;
+    double calculateThreatLevel() const override;
+    std::string getType() const override;
+    std::string serialize() const override;
+    virtual ~eliteAnbuAgent() = default;
+};
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include <string>
+
+class Mission{
+private:
+    std::string missionId;
+    std::string title;
+    int difficulty; // 1-10
+    bool completed;
+
+public:
+    Mission(const std::string &missionId, const std::string &title, int difficulty);
+
+    std::string getId() const;
+    std::string getTitle() const;
+    int getDifficulty() const;
+    bool isComplete() const;
+    std::string getStatus() const;
+
+    void completeMission();
+
+    friend std::ostream& operator<<(std::ostream& os, const Mission& p);
+};
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include "intelligenceDepartment.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+
+class IntelligenceDatabase{
+public:
+    static void SaveAllAgentsToTextFile(const IntelligenceDepartment& department, const std::string &fileName){
+        std::ofstream outFile(fileName);
+
+        if(!outFile){
+            std::cerr << "Error: Could not open file " << fileName << " for writing.\n";
+            return;
+        }
+
+        for(const auto& [id, agent] : department.getAgents()){
+            if(agent){
+                outFile << agent->serialize() << "\n";
+            }
+        }
+
+        outFile.close();
+    }
+};
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include "intelligenceReport.h"
+#include "agent.h"
+#include <tuple>
+#include <string>
+#include <compare>
+#include <vector>
+#include <unordered_map>
+
+class IntelligenceDepartment{
+private:
+    std::string id;
+    std::unordered_map<std::string, std::unique_ptr<Agent> > agents;
+    std::unordered_map<std::string, std::unique_ptr<IntelligenceReport> > reports;
+
+    std::vector<Agent*> getRawAgentPointers() const;
+
+public:
+    IntelligenceDepartment(const std::string &id);
+
+    std::string getId() const;
+
+    const std::unordered_map<std::string, std::unique_ptr<Agent>>& getAgents() const;
+
+    void addAgent(std::unique_ptr<Agent> agent);
+
+    void removeAgent(const std::string &id);
+
+    Agent* findAgentById(const std::string &id) const;
+
+    void displayAllAgents() const;
+
+    void addReport(std::unique_ptr<IntelligenceReport> report, const std::string &submitterId);
+
+    void removeReport(const std::string &id);
+
+    IntelligenceReport* findReportById(const std::string &id) const;
+
+    void displayAllReports() const;
+
+    double getTotalThreatLevel() const;
+
+    Agent* getMostDangerousAgent() const;
+
+    std::vector<Agent*> sortAgentsByThreatLevel() const;
+
+    std::vector<Agent*> sortAgentsByAge() const;
+
+    std::vector<Agent*> sortAgentsByExperience() const;
+
+    std::vector<Agent*> getAgentsByType(const std::string &type) const;
+
+    double getAverageThreatLevel() const;
+
+    double getAverageExperience() const;
+
+    double getAverageAge() const;
+
+    std::tuple<int, int, int> getAgentCountByType() const;
+
+    bool operator==(const IntelligenceDepartment &other) const;
+};
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include <string>
+#include <compare>
+#include <iostream>
+
+class IntelligenceReport{
+private:
+    std::string reportId;
+    std::string description;
+    int dangerRating;
+    std::string submittedBy;
+
+public:
+    IntelligenceReport(const std::string &reportId, const std::string &description, int dangerRating);
+
+    std::string getReportId() const;
+    std::string getDescription() const;
+    int getDangerRating() const;
+    std::string getSubmitterID() const;
+
+    void writeDescription(const std::string &description);
+    void setDangerRating(int dangerRating);
+    void setSubmitterId(const std::string &id);
+
+    bool operator==(const IntelligenceReport &other) const;
+
+    friend std::ostream& operator<<(std::ostream &os, const IntelligenceReport &report);
+};
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include <string>
+#include <stdexcept>
+#include <type_traits>
+
+namespace Validation{
+
+    inline std::string validateNotBlank(const std::string &value, const std::string &fieldName){
+        if(value.empty()){
+            throw std::invalid_argument(fieldName + " cannot be empty.");
+        }
+        return value;
+    }
+
+    template <typename T>
+    inline T validateNotNegative(T value, const std::string &fieldName){
+        static_assert(std::is_arithmetic_v<T>, "Template parameter must be numeric type.");
+        if(value < 0){
+            throw std::invalid_argument(fieldName + " cannot be negative.");
+        }
+        return value;
+    }
+
+    template <typename T>
+    inline void validateAlessThanB(T lesserValue, T greaterValue, const std::string &firstName, const std::string &secondName){
+        static_assert(std::is_arithmetic_v<T>, "Template parameters must be numeric type.");
+        if(lesserValue >= greaterValue){
+            throw std::invalid_argument(firstName + " must be less than " + secondName + ".");
+        }
+    }
+
+    template <typename A, typename U>
+    inline A validateBetween(A value, U minValue, U maxValue, const std::string &fieldName){
+        static_assert(std::is_arithmetic_v<A>, "Template parameters must be numeric type.");
+        static_assert(std::is_arithmetic_v<U>, "Template parameters must be numeric type.");
+        if(value < minValue || value > maxValue){
+            throw std::invalid_argument(fieldName + " should be in range [" + std::to_string(minValue) + "-" + std::to_string(maxValue) + "].");
+        }
+        return value;
+    }
+}
+
+--------------------------------------------------------------------------------------------
+
+#pragma once
+
+#include <stdexcept>
+#include <string>
+
+class EmptyTextEception : public std::runtime_error{
+public:
+    explicit EmptyTextEception(const std::string &value)
+        : std::runtime_error("Error: " + value + " cannot be empty.") {}
+};
+
+class NullObjectException : public std::runtime_error{
+public:  
+    explicit NullObjectException(const std::string &value)
+        : std::runtime_error("Error:" + value + " cannot be null.") {}
+};
+
+class AgentNotFoundException : public std::runtime_error{
+public:
+    explicit AgentNotFoundException(const std::string &id)
+        : std::runtime_error("Error: Agent with ID " + id + " not found.") {}
+};
+
+class ReportNotFoundException : public std::runtime_error{
+public:
+    explicit ReportNotFoundException(const std::string &id)
+        : std::runtime_error("Error: Report with ID " + id + " not found.") {}
+};
+
+class MissionNotFoundException : public std::runtime_error{
+public:
+    explicit MissionNotFoundException(const std::string &id)
+        : std::runtime_error("Error: Mission with ID " + id + " not assigned to this agent.") {}
+};
+
+class DuplicateAgentException : public std::runtime_error{
+public:
+    explicit DuplicateAgentException()
+        : std::runtime_error("Error: Agent is already in the department.") {}
+};
+
+class DuplicateReportException : public std::runtime_error{
+public:
+    explicit DuplicateReportException()
+        : std::runtime_error("Error: Report is already in the department.") {}
+};
+
+class DuplicateMissionException : public std::runtime_error{
+public:
+    explicit DuplicateMissionException()
+        : std::runtime_error("Error: Mission is already in the assigned to this agent.") {}
+};
+
+--------------------------------------------------------------------------------------------
+
+#include "agent.h"
+#include "validation.h"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+#include <algorithm>
+#include "exceptions.h"
+#include "intelligenceDepartment.h"
+
+Agent::Agent(const std::string &id, const std::string &codeName, int age, int yearsOfExperience){
+    this->id = Validation::validateNotBlank(id, "ID");
+    this->codeName = Validation::validateNotBlank(codeName, "Code name");
+    Validation::validateAlessThanB(yearsOfExperience, age, "Experience years", "Age");
+    this->age = Validation::validateNotNegative(age, "Age");
+    this->yearsOfExperience = Validation::validateNotNegative(yearsOfExperience, "Experience years");
+}
+
+std::string Agent::getId() const {return id;}
+std::string Agent::getCodeName() const {return codeName;}
+int Agent::getAge() const {return age;}
+int Agent::getExperience() const {return yearsOfExperience;}
+std::vector<std::shared_ptr<Mission> > Agent::getMissionsList() const{
+    std::vector<std::shared_ptr<Mission> > missionList;
+    if(missions.empty()) return missionList;
+    for(const auto &value : std::views::values(missions)){
+        missionList.push_back(value);
+    }
+    return missionList;
+}
+
+
+void Agent::setCodeName(const std::string &codeName){
+    this->codeName = Validation::validateNotBlank(codeName, "Code name");
+}
+
+void Agent::setAge(int age){
+    Validation::validateAlessThanB(this->yearsOfExperience, age, "Experience years", "Age");
+    this->age = Validation::validateNotNegative(age, "Age");
+}
+
+void Agent::setExperience(int experience){
+    Validation::validateAlessThanB(experience, this->age, "Experience years", "Age");
+    this->yearsOfExperience = Validation::validateNotNegative(experience, "Experience years");
+}
+
+void Agent::addExperience(int experience){
+    setExperience(std::min(this->yearsOfExperience + experience, age - 1));
+}
+
+void Agent::assignMission(std::shared_ptr<Mission> mission){
+    if(!mission) throw NullObjectException("Mission");
+    auto [it, inserted] = missions.try_emplace(mission->getId(), mission);
+    if(!inserted){
+        throw DuplicateMissionException();
+    }
+}
+
+void Agent::removeMission(const std::string &id){
+    if(id.empty()) throw EmptyTextEception("Mission ID");
+    if(missions.erase(id) == 0){
+        throw MissionNotFoundException(id);
+    }
+}
+
+Mission* Agent::findMissionById(const std::string &id) const{
+    if(id.empty()) throw EmptyTextEception("Mission ID");
+    auto it = missions.find(id);
+    if(it != missions.end()){
+        return it->second.get();
+    }
+    std::cerr << "Mission with such ID was not found\n";
+    return nullptr;
+}
+
+void Agent::completeMission(const std::string &id){
+    if(id.empty()) throw EmptyTextEception("Mission ID");
+    Mission* mission = findMissionById(id);
+    if(mission) mission->completeMission();
+}
+
+void Agent::showMissions() const{
+    if(missions.empty()) return;
+    for(const auto &value : std::views::values(missions)){
+        std::cout << value << "\n";
+    }
+}
+
+bool Agent::hasCompleted(const std::string &id) const{
+    if(id.empty()) throw EmptyTextEception("Mission ID");
+    Mission* mission = findMissionById(id);
+    if(mission){
+        return mission->isComplete();
+    }
+    return false;
+}
+
+void Agent::submitReport(std::unique_ptr<IntelligenceReport> report, IntelligenceDepartment *department){
+    if(!department) throw NullObjectException("Department");
+    if(department->findAgentById(this->id) == nullptr) throw std::out_of_range("The agent must be a part of the department to sumbit reports.");
+    department->addReport(std::move(report), getId());
+}
+
+void Agent::displayInfo() const{
+    std::cout << "ID: " << id << "\nName: " << codeName << "\nAge: " << age << "\nExperience: " << yearsOfExperience << " years\n";
+}
+
+bool Agent::operator==(const Agent &other) const{
+    return this->id == other.id;
+}
+--------------------------------------------------------------------------------------------
+
+#include "intelligenceDepartment.h"
+#include "infiltrationAgent.h"
+#include "validation.h"
+#include <iostream>
+
+infiltrationAgent::infiltrationAgent(const std::string &id, const std::string &codeName, int age, int yearsOfExperience, int villagesPenetrated)
+    : Agent(id, codeName, age, yearsOfExperience)
+{
+    this->villagesPenetrated = Validation::validateNotNegative(villagesPenetrated, "Villages penetrated");
+}
+
+int infiltrationAgent::getVillagesPenetrated() const{return villagesPenetrated;}
+
+void infiltrationAgent::setVillagesPenetrated(int amount){
+    this->villagesPenetrated = Validation::validateNotNegative(amount, "Villages penetrated");
+}
+
+void infiltrationAgent::addVillagesPenetrated(int amount){
+    this->villagesPenetrated += Validation::validateNotNegative(amount, "Villages penetrated");
+}
+
+void infiltrationAgent::displayInfo() const{
+    Agent::displayInfo();
+
+    std::cout << "Villages penetrated: " << villagesPenetrated << "\n";
+}
+
+std::string infiltrationAgent::getType() const{return "Infiltration Agent";}
+
+std::string infiltrationAgent::serialize() const{
+    return "INFILTRATION," + codeName + "," + id + "," + std::to_string(age) + "," + std::to_string(yearsOfExperience) + "," + std::to_string(villagesPenetrated);
+}
+
+double infiltrationAgent::calculateThreatLevel() const{ return villagesPenetrated * 3.0;}
+
+--------------------------------------------------------------------------------------------
+
+#include "intelligenceDepartment.h"
+#include "reconAgent.h"
+#include "validation.h"
+#include <iostream>
+
+reconAgent::reconAgent(const std::string &id, const std::string &codeName, int age, int yearsOfExperience, int missionsObserved)
+    : Agent(id, codeName, age, yearsOfExperience)
+{
+    this->missionsObserved = Validation::validateNotNegative(missionsObserved, "Observed missions count");
+}
+
+int reconAgent::getMissionsObserved() const {return missionsObserved;}
+
+void reconAgent::setMissionsObserved(int count){
+    this->missionsObserved = Validation::validateNotNegative(count, "Mission count");
+}
+void reconAgent::addMissionCount(int count){
+    this->missionsObserved += Validation::validateNotNegative(count, "Mission count");
+}
+
+void reconAgent::displayInfo() const{
+    Agent::displayInfo();
+
+    std::cout << "Missions observed: " << missionsObserved << "\n";
+}
+
+std::string reconAgent::getType() const {return "Recon Agent";}
+
+std::string reconAgent::serialize() const{
+    return "RECON," + codeName + "," + id + "," + std::to_string(age) + "," + std::to_string(yearsOfExperience) + "," + std::to_string(missionsObserved);
+}
+
+double reconAgent::calculateThreatLevel() const{return missionsObserved * 1.5;}
+
+--------------------------------------------------------------------------------------------
+
+#include "intelligenceDepartment.h"
+#include "eliteAnbuAgent.h"
+#include "validation.h"
+#include <iostream>
+
+eliteAnbuAgent::eliteAnbuAgent(const std::string &id, const std::string &codeName, int age, int yearsOfExperience, int classifiedOperations)
+: Agent(id, codeName, age, yearsOfExperience)
+{
+    this->classifiedOperations = Validation::validateNotNegative(classifiedOperations, "Classified operations");
+}
+
+int eliteAnbuAgent::getClassifiedOperations() const{return classifiedOperations;}
+
+void eliteAnbuAgent::setClassifiedOperations(int amount){
+    this->classifiedOperations = Validation::validateNotNegative(amount, "Classified operations");
+}
+    
+void eliteAnbuAgent::addClassifiedOperations(int amount){
+    this->classifiedOperations += Validation::validateNotNegative(amount, "Classified operations");
+}
+
+void eliteAnbuAgent::displayInfo() const{
+    Agent::displayInfo();
+
+    std::cout << "Classified operations: " << classifiedOperations << "\n";
+}
+
+std::string eliteAnbuAgent::getType() const{return "Elite Anbu Agent";}
+
+std::string eliteAnbuAgent::serialize() const{
+    return "ANBU," + codeName + "," + id + "," + std::to_string(age) + "," + std::to_string(yearsOfExperience) + "," + std::to_string(classifiedOperations);
+}
+
+double eliteAnbuAgent::calculateThreatLevel() const{return classifiedOperations * 5.0;}
+
+--------------------------------------------------------------------------------------------
+
+#include "validation.h"
+#include "mission.h"
+#include <iostream>
+#include <string>
+
+Mission::Mission(const std::string &missionId, const std::string &title, int difficulty){
+    this->missionId = Validation::validateNotBlank(missionId, "Mission ID");
+    this->title = Validation::validateNotBlank(title, "Mission title");
+    this->difficulty = Validation::validateBetween(difficulty, 1, 10, "Mission difficulty");
+    this->completed = false; // all missions are incomplete when created
+}
+
+std::string Mission::getId() const{return missionId;}
+std::string Mission::getTitle() const{return title;}
+int Mission::getDifficulty() const{return difficulty;}
+bool Mission::isComplete() const{return completed;}
+
+std::string Mission::getStatus() const{
+    if(completed) return "Complete";
+    return "Incomplete";
+}
+
+void Mission::completeMission(){
+    if(completed) return;
+    this->completed = true;
+}
+
+std::ostream& operator<<(std::ostream& os, const Mission& p){
+    os << "Mission ID: " << p.missionId << "\nTitle: " << p.title << "\nDifficulty (1-10): " << p.difficulty << "Status: " << p.getStatus();
+    return os;
+}
+
+--------------------------------------------------------------------------------------------
+
+#include "intelligenceReport.h"
+#include "validation.h"
+#include <string>
+#include <compare>
+#include <iostream>
+
+IntelligenceReport::IntelligenceReport(const std::string &reportId, const std::string &description, int dangerRating){
+    this->reportId = Validation::validateNotBlank(reportId, "Report ID");
+    this->description = Validation::validateNotBlank(description, "Description");
+    this->dangerRating = Validation::validateBetween(dangerRating, 1, 10, "Danger rating");
+    this->submittedBy = "None";
+}
+
+std::string IntelligenceReport::getReportId() const{return reportId;}
+std::string IntelligenceReport::getDescription() const{return description;}
+int IntelligenceReport::getDangerRating() const{return dangerRating;}
+std::string IntelligenceReport::getSubmitterID() const{return submittedBy;}
+
+void IntelligenceReport::writeDescription(const std::string &description){
+    this->description = Validation::validateNotBlank(description, "Description");
+}
+    
+void IntelligenceReport::setDangerRating(int dangerRating){
+    this->dangerRating = Validation::validateBetween(dangerRating, 1, 10, "Danger rating");
+}
+
+void IntelligenceReport::setSubmitterId(const std::string &id){
+    this->submittedBy = Validation::validateNotBlank(id, "Submitter ID");
+}
+
+
+bool IntelligenceReport::operator==(const IntelligenceReport &other) const{
+    return this->reportId == other.reportId;
+}
+
+std::ostream& operator<<(std::ostream &os, const IntelligenceReport &report){
+    os << "ID: " << report.reportId << "\nDescription: " << report.description << "\nDanger rating (1-10): " << report.dangerRating;
+    return os;
+}
+
+--------------------------------------------------------------------------------------------
+
+#include "intelligenceDepartment.h"
+#include "infiltrationAgent.h"
+#include "eliteAnbuAgent.h"
+#include "exceptions.h"
+#include "validation.h"
+#include "reconAgent.h"
+#include <unordered_map>
+#include <algorithm>
+#include <stdexcept>
+#include <iostream>
+#include <ranges>
+#include <vector>
+#include "agent.h"
+#include <tuple>
+
+IntelligenceDepartment::IntelligenceDepartment(const std::string &id){
+    this->id = Validation::validateNotBlank(id, "Department ID");
+}
+
+std::string IntelligenceDepartment::getId() const{return id;}
+
+const std::unordered_map<std::string, std::unique_ptr<Agent>>& IntelligenceDepartment::getAgents() const {return agents;}
+
+void IntelligenceDepartment::addAgent(std::unique_ptr<Agent> agent){
+    if(agent == nullptr){
+        throw NullObjectException("Agent");
+    }
+    auto [it, inserted] = agents.try_emplace(agent->getId(), std::move(agent));
+    if(!inserted){
+        throw DuplicateAgentException();
+    }
+}
+
+void IntelligenceDepartment::removeAgent(const std::string &id){
+    if(id.empty()){
+        throw EmptyTextEception(" Agent ID");
+    }
+    if(agents.erase(id) == 0){
+        throw AgentNotFoundException(id);
+    }
+}
+
+Agent* IntelligenceDepartment::findAgentById(const std::string &id) const{
+    if(id.empty()){
+        throw EmptyTextEception("Agent ID");
+    }
+    auto it = agents.find(id);
+    if(it != agents.end()){
+        return it->second.get();
+    }
+    std::cerr << "Agent with such ID was not found.\n";
+    return nullptr;
+}
+
+void IntelligenceDepartment::displayAllAgents() const{
+    if(agents.empty()) return;
+    std::cout << "\nAll " << agents.size() << " agents of the department!\n\n";
+    for(const auto &value : std::views::values(agents)){
+        value->displayInfo();
+        std::cout << "\n";
+    }
+}
+
+void IntelligenceDepartment::addReport(std::unique_ptr<IntelligenceReport> report, const std::string &submitterId){
+    if(!report) throw NullObjectException("Report");
+    if(reports.count(report->getReportId()) > 0){
+        throw DuplicateReportException();        
+    }
+    report->setSubmitterId(submitterId);
+    reports.emplace(report->getReportId(), std::move(report));
+}
+
+void IntelligenceDepartment::removeReport(const std::string &id){
+    if(id.empty()) throw EmptyTextEception("Report ID");
+    if(reports.erase(id) == 0){
+        throw ReportNotFoundException(id);
+    }
+}
+
+IntelligenceReport* IntelligenceDepartment::findReportById(const std::string &id) const{
+    if(reports.empty()) return nullptr;
+    auto it = reports.find(id);
+    if(it != reports.end()){
+        return it->second.get();
+    }
+    std::cerr << "Report with such ID was not found.\n";
+    return nullptr;
+}
+
+void IntelligenceDepartment::displayAllReports() const{
+    if(reports.empty()) return;
+    std::cout << "All " << reports.size() << " reports:\n\n";
+    for(const auto &value : std::views::values(reports)){
+        std::cout << value << "\n";
+    }
+    std::cout << "\n";
+}
+
+double IntelligenceDepartment::getTotalThreatLevel() const{
+    double total = 0.0; 
+    for(const auto &value : std::views::values(agents)){
+        total += value->calculateThreatLevel(); 
+    }
+    return total;
+}
+
+Agent* IntelligenceDepartment::getMostDangerousAgent() const{
+    if(agents.empty()){
+        return nullptr;
+    }
+    Agent* curr = nullptr;
+    double maxThreat = -1.0;
+    for(const auto &value : std::views::values(agents)){
+        double currentThreat = value->calculateThreatLevel();
+        if(currentThreat > maxThreat){
+            maxThreat = currentThreat;
+            curr = value.get();
+        }
+    }
+    return curr;
+}
+
+std::vector<Agent*> IntelligenceDepartment::getRawAgentPointers() const{
+    std::vector<Agent*> ptrs;
+    ptrs.reserve(agents.size());
+    for(const auto &value : std::views::values(agents)){
+        ptrs.push_back(value.get());
+    }
+    return ptrs;
+}
+
+std::vector<Agent*> IntelligenceDepartment::sortAgentsByThreatLevel() const{
+    auto sortedAgents = getRawAgentPointers();
+    std::sort(sortedAgents.begin(), sortedAgents.end(), [](Agent* a, Agent* b){
+        return a->calculateThreatLevel() > b->calculateThreatLevel();
+    });
+    return sortedAgents;
+}
+
+std::vector<Agent*> IntelligenceDepartment::sortAgentsByAge() const{
+    auto sortedAgents = getRawAgentPointers();
+    std::sort(sortedAgents.begin(), sortedAgents.end(), [](Agent* a, Agent* b){
+        return a->getAge() > b->getAge();
+    });
+    return sortedAgents;
+}
+
+std::vector<Agent*> IntelligenceDepartment::sortAgentsByExperience() const{
+    auto sortedAgents = getRawAgentPointers();
+    std::sort(sortedAgents.begin(), sortedAgents.end(), [](Agent* a, Agent* b){
+        return a->getExperience() > b->getExperience();
+    });
+    return sortedAgents;
+}
+
+std::vector<Agent*> IntelligenceDepartment::getAgentsByType(const std::string &type) const{
+    if(type.empty() || type != "Elite Anbu Agent" || type != "Infiltration Agent" || type != "Recon Agent"){
+        throw std::invalid_argument("Please, enter a valid agent type:\n1. Elite Anbu Agent\n2. Infiltration Agent\n3. Recon Agent");
+    }
+    std::vector<Agent*> anbus;
+    if(agents.empty()) return anbus;
+    for(const auto &value : std::views::values(agents)){
+        if(value->getType() == type){
+            anbus.push_back(value.get());
+        }
+    }
+    return anbus;
+}
+
+double IntelligenceDepartment::getAverageThreatLevel() const{
+    if(agents.empty()) return 0.0;
+    double sum = 0.0;
+    for(const auto& agent : std::views::values(agents)){
+        sum += static_cast<double>(agent->calculateThreatLevel());
+    }
+    return sum / agents.size();
+}
+
+double IntelligenceDepartment::getAverageExperience() const{
+    if(agents.empty()) return 0.0;
+    double sum = 0.0;
+    for(const auto& agent : std::views::values(agents)){
+        sum += static_cast<double>(agent->getExperience());
+    }
+    return sum / agents.size();
+}
+
+double IntelligenceDepartment::getAverageAge() const{
+    if(agents.empty()) return 0.0;
+    double sum = 0.0;
+    for(const auto& agent : std::views::values(agents)){
+        sum += static_cast<double>(agent->getAge());
+    }
+    return sum / agents.size();
+}
+
+std::tuple<int, int, int> IntelligenceDepartment::getAgentCountByType() const{
+    if(agents.empty()) return {0,0,0};
+    int reconCount = 0, anbuCount = 0, infiltCount = 0;
+    for(const auto& agent : std::views::values(agents)){
+        if(!agent) continue;
+        if(dynamic_cast<reconAgent*>(agent.get())){
+            reconCount++;
+        }else if (dynamic_cast<eliteAnbuAgent*>(agent.get())) { // Adjust class name to match yours
+            anbuCount++;
+        } else if (dynamic_cast<infiltrationAgent*>(agent.get())) {
+            infiltCount++;
+        }
+    }
+    return {reconCount, anbuCount, infiltCount};
+}
+
+bool IntelligenceDepartment::operator==(const IntelligenceDepartment &other) const{
+    return this->id == other.id;
+}
+
+--------------------------------------------------------------------------------------------
+
+#include "agent.h"
+#include "mission.h"
+#include "reconAgent.h"
+#include "eliteAnbuAgent.h"
+#include "infiltrationAgent.h"
+#include "intelligenceReport.h"
+#include <memory>
+#include <cassert>
+#include <iostream>
+
+void test_recon_agent_constructor(){
+    auto agent = std::make_unique<reconAgent>("AD7889012", "Naruto", 18, 2, 12);
+
+    assert(agent->getId() == "AD7889012");
+    assert(agent->getCodeName() == "Naruto");
+    assert(agent->getAge() == 18);
+    assert(agent->getExperience() == 2);
+    assert(agent->getMissionsObserved() == 12);
+
+    std::string expectedCSV = "RECON,Naruto,AD7889012,18,2,12";
+    assert(agent->serialize() == expectedCSV);
+
+    std::cout << "  [PASS] ReconAgent construction and initialization.\n\n";
+}
+
+void test_anbu_agent_constructor(){
+    auto agent = std::make_unique<eliteAnbuAgent>("AD7889012", "Naruto", 18, 2, 12);
+
+    assert(agent->getId() == "AD7889012");
+    assert(agent->getCodeName() == "Naruto");
+    assert(agent->getAge() == 18);
+    assert(agent->getExperience() == 2);
+    assert(agent->getClassifiedOperations() == 12);
+
+    std::string expectedCSV = "ANBU,Naruto,AD7889012,18,2,12";
+    assert(agent->serialize() == expectedCSV);
+
+    std::cout << "  [PASS] Anbu agent construction and initialization.\n\n";
+}
+
+void test_infilt_agent_constructor(){
+    auto agent = std::make_unique<infiltrationAgent>("AD7889012", "Naruto", 18, 2, 12);
+
+    assert(agent->getId() == "AD7889012");
+    assert(agent->getCodeName() == "Naruto");
+    assert(agent->getAge() == 18);
+    assert(agent->getExperience() == 2);
+    assert(agent->getVillagesPenetrated() == 12);
+
+    std::string expectedCSV = "INFILTRATION,Naruto,AD7889012,18,2,12";
+    assert(agent->serialize() == expectedCSV);
+
+    std::cout << "  [PASS] Infiltration agent construction and initialization.\n\n";
+}
+
+void test_mission_constructor(){
+    auto mission = std::make_unique<Mission>("AD7889012", "Slay the Dragon", 10);
+
+    assert(mission->getId() == "AD7889012");
+    assert(mission->getTitle() == "Slay the Dragon");
+    assert(mission->getDifficulty() == 10);
+    assert(mission->getStatus() == "Incomplete");
+
+    std::cout << "  [PASS] Mission construction and initialization.\n\n";
+}
+
+void test_intelligence_report_constructor(){
+    auto report = std::make_unique<IntelligenceReport>("AX7838231", "Retirement", 1);
+    report->setSubmitterId("AD7889012");
+
+    assert(report->getReportId() == "AX7838231");
+    assert(report->getDescription() == "Retirement");
+    assert(report->getDangerRating() == 1);
+    assert(report->getSubmitterID() == "AD7889012");
+
+    std::cout << "  [PASS] Intelligence report construction and initialization.\n\n";
+}
+
+int main(){
+    std::cout << "====================================\n";
+    std::cout << " RUNNING AGENT CONSTRUCTOR UNIT TESTS\n";
+    std::cout << "====================================\n\n";
+
+    test_recon_agent_constructor();
+    test_anbu_agent_constructor();
+    test_infilt_agent_constructor();
+    test_mission_constructor();
+    test_intelligence_report_constructor();
+
+    std::cout << "====================================\n";
+    std::cout << " STATUS: ALL TESTS PASSED SUCCESSFULLY! ✅\n";
+    std::cout << "====================================\n";
+    return 0;
+}
+
+--------------------------------------------------------------------------------------------
+
+#include "intelligenceDepartment.h"
+#include "intelligenceReport.h"
+#include "reconAgent.h"
+#include "agent.h"
+#include <cassert>
+#include <iostream>
+#include <memory>
+#include <cmath>
+
+void test_intelligence_department_constructor(){
+    auto department = std::make_unique<IntelligenceDepartment>("IO8910234");
+
+    assert(department->getId() == "IO8910234");
+
+    std::cout << "  [PASS] Intelligence department construction and initialization.\n\n";
+}
+
+void test_department_agents(){
+    auto department = std::make_unique<IntelligenceDepartment>("IO8910234");
+    auto agent = std::make_unique<reconAgent>("AD7889012", "Naruto", 18, 2, 12);
+    auto agent1 = std::make_unique<reconAgent>("AD7889013", "Sasuke", 19, 2, 14);
+    auto agent2 = std::make_unique<reconAgent>("AD7889014", "Sakura", 16, 1, 8);
+
+    department->addAgent(std::move(agent));
+    department->addAgent(std::move(agent1));
+    department->addAgent(std::move(agent2));
+
+    Agent* testAgent = department->getMostDangerousAgent();
+
+    assert(testAgent->getCodeName() == "Sasuke");
+    assert(department->getTotalThreatLevel() == 51);
+    assert(department->getAverageThreatLevel() == 17.0);
+    const double EPSILON = 0.0001;
+    assert(std::abs(department->getAverageExperience() - 1.66667) < EPSILON);
+    assert(std::abs(department->getAverageAge() - 17.6667) < EPSILON);
+
+    std::cout << "  [PASS] Intelligence department actions with agents.\n\n";
+}
+
+void test_department_reports(){
+    auto department = std::make_unique<IntelligenceDepartment>("IO8910234");
+    auto report = std::make_unique<IntelligenceReport>("AX7838231", "Retirement", 1);
+    auto agent = std::make_unique<reconAgent>("AD7889012", "Naruto", 18, 2, 12);
+    department->addReport(std::move(report), agent->getId());
+
+    IntelligenceReport* testReport = department->findReportById("AX7838231");
+
+    assert(testReport->getReportId() == "AX7838231");
+    assert(testReport->getDescription() == "Retirement");
+    assert(testReport->getDangerRating() == 1);
+    assert(testReport->getSubmitterID() == "AD7889012");
+
+    std::cout << "  [PASS] Intelligence department actions with reports.\n\n";
+}
+
+int main(){
+    std::cout << "====================================\n";
+    std::cout << " RUNNING DEPARTMENT UNIT TESTS\n";
+    std::cout << "====================================\n\n";
+
+    test_intelligence_department_constructor();
+    test_department_agents();
+    test_department_reports();
+    
+    std::cout << "====================================\n";
+    std::cout << " DEPARTMENT STATUS: ALL PASSED ✅\n";
+    std::cout << "====================================\n";
+    return 0;
+}
