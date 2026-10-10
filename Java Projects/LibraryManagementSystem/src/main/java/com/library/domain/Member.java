@@ -1,7 +1,7 @@
 package com.library.domain;
 
 import java.util.ArrayList;
-import utils.ValidationUtils;
+import com.library.utils.ValidationUtils;
 
 public class Member{
     private String name;

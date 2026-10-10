@@ -1,6 +1,6 @@
 package com.library.domain;
 
-import utils.ValidationUtils;
+import com.library.utils.ValidationUtils;
 
 public class Book{
     private String title;
